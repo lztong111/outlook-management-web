@@ -18,6 +18,7 @@ export class DashboardService {
       email: acc.email,
       inbox_count: cacheModel.countByAccount(acc.id, 'INBOX'),
       junk_count: cacheModel.countByAccount(acc.id, 'Junk'),
+      trash_count: cacheModel.countByAccount(acc.id, 'Trash'),
     }));
 
     const now = Date.now();
@@ -28,6 +29,7 @@ export class DashboardService {
       activeAccounts: accounts.filter(a => a.status === 'active').length,
       totalInboxMails: cacheModel.countAll('INBOX'),
       totalJunkMails: cacheModel.countAll('Junk'),
+      totalTrashMails: cacheModel.countAll('Trash'),
       totalProxies: proxies.length,
       activeProxies: proxies.filter(p => p.status === 'active').length,
       recentMails,

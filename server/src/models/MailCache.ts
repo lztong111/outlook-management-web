@@ -4,9 +4,15 @@ import { MailMessage } from '../types';
 export class MailCacheModel {
   getByAccount(accountId: number, mailbox: string, page = 1, pageSize = 50) {
     const offset = (page - 1) * pageSize;
-    const total = (db.prepare('SELECT COUNT(*) as c FROM mail_cache WHERE account_id = ? AND mailbox = ?').get(accountId, mailbox) as any).c;
-    const list = db.prepare('SELECT * FROM mail_cache WHERE account_id = ? AND mailbox = ? ORDER BY mail_date DESC LIMIT ? OFFSET ?')
-      .all(accountId, mailbox, pageSize, offset) as MailMessage[];
+    let where = 'WHERE account_id = ?';
+    const params: any[] = [accountId];
+    if (mailbox && mailbox !== 'ALL') {
+      where += ' AND mailbox = ?';
+      params.push(mailbox);
+    }
+    const total = (db.prepare(`SELECT COUNT(*) as c FROM mail_cache ${where}`).get(...params) as any).c;
+    const list = db.prepare(`SELECT * FROM mail_cache ${where} ORDER BY mail_date DESC LIMIT ? OFFSET ?`)
+      .all(...params, pageSize, offset) as MailMessage[];
     return { list, total, page, pageSize };
   }
 
@@ -14,7 +20,7 @@ export class MailCacheModel {
     const stmt = db.prepare(`
       INSERT INTO mail_cache (account_id, mailbox, mail_id, sender, sender_name, subject, text_content, html_content, mail_date)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
+      ON CONFLICT(account_id, mailbox, mail_id) DO UPDATE SET
         sender = excluded.sender,
         sender_name = excluded.sender_name,
         subject = excluded.subject,

@@ -17,7 +17,7 @@ export interface Account {
 export interface MailMessage {
   id: number;
   account_id: number;
-  mailbox: 'INBOX' | 'Junk';
+  mailbox: 'INBOX' | 'Junk' | 'Trash';
   mail_id: string;
   sender: string;
   sender_name: string;
@@ -82,6 +82,7 @@ export interface DashboardStats {
   activeAccounts: number;
   totalInboxMails: number;
   totalJunkMails: number;
+  totalTrashMails: number;
   totalProxies: number;
   activeProxies: number;
   recentMails: MailMessage[];
@@ -90,6 +91,7 @@ export interface DashboardStats {
     email: string;
     inbox_count: number;
     junk_count: number;
+    trash_count: number;
   }[];
   expiringTokens: number;
   errorAccounts: number;

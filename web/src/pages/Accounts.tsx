@@ -25,7 +25,6 @@ export default function Accounts() {
   const [importOpen, setImportOpen] = useState(false);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [mailViewAccount, setMailViewAccount] = useState<Account | null>(null);
-  const [mailViewMailbox, setMailViewMailbox] = useState<'INBOX' | 'Junk'>('INBOX');
   const [mailViewOpen, setMailViewOpen] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(getDefaultVisibleColumns);
 
@@ -104,9 +103,8 @@ export default function Accounts() {
     }
   };
 
-  const handleViewMail = (account: Account, mailbox: 'INBOX' | 'Junk') => {
+  const handleViewMail = (account: Account) => {
     setMailViewAccount(account);
-    setMailViewMailbox(mailbox);
     setMailViewOpen(true);
   };
 
@@ -150,13 +148,13 @@ export default function Accounts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">邮箱管理</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">共 {pagination.total} 个邮箱账户</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">共 {pagination.total} 个邮箱账户</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <BackupRestore />
           <button
             onClick={() => { setEditAccount(null); setEditOpen(true); }}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-colors"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             新增邮箱
@@ -180,7 +178,7 @@ export default function Accounts() {
       />
 
       {/* Table */}
-      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-hidden">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 overflow-hidden shadow-sm">
         <AccountTable
           accounts={accounts}
           selectedIds={selectedIds}
@@ -244,13 +242,12 @@ export default function Accounts() {
         onDeleteTag={handleDeleteTag}
       />
       <ImportDialog open={importOpen} onClose={() => setImportOpen(false)} onImport={() => fetchAccounts()} />
-      <PasteImportDialog open={pasteOpen} onClose={() => setPasteOpen(false)} onImport={() => fetchAccounts()} />
+      <PasteImportDialog open={pasteOpen} onClose={() => setPasteOpen(false)} onImport={fetchAccounts} />
       {mailViewAccount && (
         <MailViewerDialog
           open={mailViewOpen}
           accountId={mailViewAccount.id}
           accountEmail={mailViewAccount.email}
-          initialMailbox={mailViewMailbox}
           onClose={() => setMailViewOpen(false)}
         />
       )}

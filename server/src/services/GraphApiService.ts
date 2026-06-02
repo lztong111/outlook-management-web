@@ -6,7 +6,12 @@ const proxyService = new ProxyService();
 
 export class GraphApiService {
   async fetchMails(accessToken: string, mailbox: string, top = 50, proxyId?: number): Promise<Partial<MailMessage>[]> {
-    const folder = mailbox === 'Junk' ? 'junkemail' : 'inbox';
+    const folderMap: Record<string, string> = {
+      'INBOX': 'inbox',
+      'Junk': 'junkemail',
+      'Trash': 'deleteditems',
+    };
+    const folder = folderMap[mailbox] || 'inbox';
     const { agent, dispatcher, type } = proxyService.getAgent(proxyId);
 
     const url = `https://graph.microsoft.com/v1.0/me/mailFolders/${folder}/messages?$top=${top}`;

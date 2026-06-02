@@ -5,54 +5,66 @@ import { useAccountStore } from './accounts';
 
 interface MailStore {
   currentAccountId: number | null;
-  currentMailbox: 'INBOX' | 'Junk';
   mails: MailMessage[];
   selectedMail: MailMessage | null;
   loading: boolean;
   fetchResult: FetchMailsResult | null;
   setCurrentAccount: (id: number) => void;
-  setMailbox: (box: 'INBOX' | 'Junk') => void;
-  fetchMails: (accountId: number, mailbox: string, proxyId?: number) => Promise<void>;
-  fetchCachedMails: (accountId: number, mailbox: string) => Promise<void>;
-  clearMailbox: (accountId: number, mailbox: string, proxyId?: number) => Promise<void>;
+  fetchAllMails: (accountId: number, proxyId?: number) => Promise<void>;
+  fetchCachedMails: (accountId: number) => Promise<void>;
+  clearAllMailbox: (accountId: number, proxyId?: number) => Promise<void>;
   selectMail: (mail: MailMessage | null) => void;
 }
 
 export const useMailStore = create<MailStore>((set) => ({
   currentAccountId: null,
-  currentMailbox: 'INBOX',
   mails: [],
   selectedMail: null,
   loading: false,
   fetchResult: null,
 
   setCurrentAccount: (id) => set({ currentAccountId: id, mails: [], selectedMail: null }),
-  setMailbox: (box) => set({ currentMailbox: box, mails: [], selectedMail: null }),
 
-  fetchMails: async (accountId, mailbox, proxyId) => {
+  fetchAllMails: async (accountId, proxyId) => {
     set({ loading: true });
     try {
-      const result = await mailApi.fetch({ account_id: accountId, mailbox, proxy_id: proxyId });
-      set({ mails: result.mails, fetchResult: result });
-      // 无感刷新账户状态
+      // 获取收件箱和垃圾箱邮件
+      const results = await Promise.allSettled([
+        mailApi.fetch({ account_id: accountId, mailbox: 'INBOX', proxy_id: proxyId }),
+        mailApi.fetch({ account_id: accountId, mailbox: 'Junk', proxy_id: proxyId }),
+      ]);
+      
+      const allMails: any[] = [];
+      results.forEach(result => {
+        if (result.status === 'fulfilled') {
+          allMails.push(...result.value.mails);
+        }
+      });
+      
+      // 按时间排序
+      allMails.sort((a, b) => new Date(b.mail_date).getTime() - new Date(a.mail_date).getTime());
+      set({ mails: allMails });
       useAccountStore.getState().refreshAccountsSilent();
     } finally {
       set({ loading: false });
     }
   },
 
-  fetchCachedMails: async (accountId, mailbox) => {
+  fetchCachedMails: async (accountId) => {
     set({ loading: true });
     try {
-      const data = await mailApi.cached({ account_id: accountId, mailbox, pageSize: 100 });
+      const data = await mailApi.cached({ account_id: accountId, mailbox: 'ALL', pageSize: 200 });
       set({ mails: data.list });
     } finally {
       set({ loading: false });
     }
   },
 
-  clearMailbox: async (accountId, mailbox, proxyId) => {
-    await mailApi.clear({ account_id: accountId, mailbox, proxy_id: proxyId });
+  clearAllMailbox: async (accountId, proxyId) => {
+    await Promise.allSettled([
+      mailApi.clear({ account_id: accountId, mailbox: 'INBOX', proxy_id: proxyId }),
+      mailApi.clear({ account_id: accountId, mailbox: 'Junk', proxy_id: proxyId }),
+    ]);
     set({ mails: [], selectedMail: null });
     useAccountStore.getState().refreshAccountsSilent();
   },

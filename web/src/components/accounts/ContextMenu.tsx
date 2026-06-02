@@ -26,7 +26,7 @@ interface Props {
   onCopyToken: () => void;
   onEdit: () => void;
   onToggleTag: (tagId: number) => void;
-  onViewMail: (mailbox: 'INBOX' | 'Junk') => void;
+  onViewMail: () => void;
   onDelete: () => void;
 }
 
@@ -64,8 +64,7 @@ export default function ContextMenu({ x, y, account, tags, onClose, onCopyEmail,
     { separator: true },
     { label: '编辑', onClick: onEdit, icon: <EditIcon /> },
     { separator: true },
-    { label: '查看收件箱', onClick: () => onViewMail('INBOX'), icon: <MailIcon /> },
-    { label: '查看垃圾邮件', onClick: () => onViewMail('Junk'), icon: <MailIcon /> },
+    { label: '查看邮件', onClick: onViewMail, icon: <MailIcon /> },
     { separator: true },
     { label: '删除', onClick: onDelete, danger: true, icon: <DeleteIcon /> },
   ];

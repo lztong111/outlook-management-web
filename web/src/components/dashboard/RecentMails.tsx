@@ -38,10 +38,12 @@ function MailItem({ mail, index }: { mail: MailMessage; index: number }) {
         className={`text-[10px] px-1.5 py-0.5 rounded font-medium shrink-0 ${
           mail.mailbox === 'INBOX'
             ? 'bg-primary/10 text-primary'
-            : 'bg-amber-500/10 text-amber-500'
+            : mail.mailbox === 'Junk'
+            ? 'bg-amber-500/10 text-amber-500'
+            : 'bg-red-500/10 text-red-500'
         }`}
       >
-        {mail.mailbox === 'INBOX' ? '收件箱' : '垃圾箱'}
+        {mail.mailbox === 'INBOX' ? '收件箱' : mail.mailbox === 'Junk' ? '垃圾箱' : '已删除'}
       </span>
     </motion.div>
   );

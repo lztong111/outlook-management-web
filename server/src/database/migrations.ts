@@ -1,6 +1,7 @@
 import db from './index';
 
 export function runMigrations() {
+  // 1. 创建 accounts 表
   db.exec(`
     CREATE TABLE IF NOT EXISTS accounts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -13,9 +14,11 @@ export function runMigrations() {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
-
     CREATE UNIQUE INDEX IF NOT EXISTS idx_accounts_email ON accounts(email);
+  `);
 
+  // 2. 创建 proxies 表
+  db.exec(`
     CREATE TABLE IF NOT EXISTS proxies (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL DEFAULT '',
@@ -30,11 +33,15 @@ export function runMigrations() {
       status TEXT DEFAULT 'untested' CHECK(status IN ('untested','active','failed')),
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+  `);
 
-    CREATE TABLE IF NOT EXISTS mail_cache (
+  // 3. 重建 mail_cache 表（删除旧表，确保结构正确）
+  db.exec(`DROP TABLE IF EXISTS mail_cache;`);
+  db.exec(`
+    CREATE TABLE mail_cache (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       account_id INTEGER NOT NULL,
-      mailbox TEXT NOT NULL DEFAULT 'INBOX' CHECK(mailbox IN ('INBOX','Junk')),
+      mailbox TEXT NOT NULL DEFAULT 'INBOX',
       mail_id TEXT DEFAULT '',
       sender TEXT DEFAULT '',
       sender_name TEXT DEFAULT '',
@@ -46,33 +53,33 @@ export function runMigrations() {
       cached_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE
     );
-
-    CREATE INDEX IF NOT EXISTS idx_mail_cache_account ON mail_cache(account_id, mailbox);
-    CREATE INDEX IF NOT EXISTS idx_mail_cache_date ON mail_cache(mail_date DESC);
+    CREATE UNIQUE INDEX idx_mail_cache_unique ON mail_cache(account_id, mailbox, mail_id);
+    CREATE INDEX idx_mail_cache_account ON mail_cache(account_id, mailbox);
+    CREATE INDEX idx_mail_cache_date ON mail_cache(mail_date DESC);
   `);
 
-  // 新增 token_refreshed_at 字段（兼容已有数据库）
+  // 4. 新增 token_refreshed_at 字段（兼容已有数据库）
   try {
     db.exec(`ALTER TABLE accounts ADD COLUMN token_refreshed_at DATETIME`);
   } catch {
     // 字段已存在则忽略
   }
 
-  // 新增 remark 备注字段
+  // 5. 新增 remark 备注字段
   try {
     db.exec(`ALTER TABLE accounts ADD COLUMN remark TEXT DEFAULT ''`);
   } catch {
     // 字段已存在则忽略
   }
 
-  // 标签系统
+  // 6. 标签系统
   db.exec(`
     CREATE TABLE IF NOT EXISTS tags (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
       color TEXT NOT NULL DEFAULT '#3B82F6',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
+    );
   `);
 
   db.exec(`
@@ -82,6 +89,6 @@ export function runMigrations() {
       PRIMARY KEY (account_id, tag_id),
       FOREIGN KEY (account_id) REFERENCES accounts(id) ON DELETE CASCADE,
       FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
-    )
+    );
   `);
 }

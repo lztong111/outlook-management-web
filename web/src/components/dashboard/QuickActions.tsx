@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertCircle, XCircle, Clock, Wifi } from 'lucide-react';
+import { AlertCircle, XCircle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { DashboardStats } from '../../types';
 
@@ -32,13 +32,6 @@ export function QuickActions({ stats }: Props) {
       path: '/accounts',
       count: stats?.unusedAccounts || 0,
     },
-    {
-      icon: Wifi,
-      label: '测试代理',
-      color: '#22C55E',
-      path: '/proxy',
-      count: stats?.totalProxies || 0,
-    },
   ];
 
   return (
@@ -51,7 +44,7 @@ export function QuickActions({ stats }: Props) {
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-sm font-semibold text-foreground">快速操作</h2>
       </div>
-      <div className="p-4 grid grid-cols-2 gap-3">
+      <div className="p-4 grid grid-cols-3 gap-3">
         {actions.map((action, i) => (
           <motion.button
             key={action.label}

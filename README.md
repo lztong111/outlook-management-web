@@ -1,173 +1,201 @@
-# Outlook 邮箱管理器
+# Outlook Mail Manager
 
-一个用于批量管理 Microsoft Outlook 邮箱账户的全栈 Web 应用。支持 OAuth2 双协议（Graph API + IMAP）收取邮件，内置代理管理，提供现代化的 Glassmorphism 风格界面。
+Outlook/Hotmail 邮箱批量管理工具，支持多账户管理、邮件查看、Token 自动刷新等功能。
 
-## 界面预览
+## 功能特性
 
-| 仪表盘 | 邮箱管理 |
-|:---:|:---:|
-| ![仪表盘页面](docs/screenshots/仪表盘页面.png) | ![邮箱管理页面](docs/screenshots/邮箱管理页面.png) |
-
-| 邮件查看 | 移动端 |
-|:---:|:---:|
-| ![邮件查看弹窗](docs/screenshots/邮件查看弹窗.png) | ![移动端效果](docs/screenshots/移动端效果.png) |
+- 📧 **多账户管理** - 批量导入、导出、编辑邮箱账户
+- 📬 **邮件查看** - 支持收件箱、垃圾箱邮件查看
+- 🔄 **Token 自动刷新** - 每 10 天自动刷新所有账户的 Refresh Token
+- 🏷️ **标签系统** - 支持为邮箱添加自定义标签
+- 🔐 **安全认证** - 登录密码保护，未登录无法访问
+- 🌙 **暗色模式** - 支持亮色/暗色/跟随系统主题
+- 📱 **响应式设计** - 支持桌面端和移动端
 
 ## 技术栈
 
 | 层级 | 技术 |
 |------|------|
-| 后端 | Koa 3 + TypeScript + SQLite (better-sqlite3) |
-| 前端 | React 19 + Tailwind CSS 3 + Zustand 5 + Framer Motion 11 |
-| UI 组件 | Radix UI 原语 + 自定义 Glassmorphism 组件 |
-| 邮件协议 | Microsoft Graph API / IMAP (XOAUTH2) |
-| 代理 | SOCKS5 (socks-proxy-agent) / HTTP (undici ProxyAgent) |
+| 前端 | React 19 + Vite + Tailwind CSS + Zustand |
+| 后端 | Node.js + Koa 3 + TypeScript |
+| 数据库 | SQLite (better-sqlite3) |
+| 邮件协议 | Microsoft Graph API + IMAP (XOAUTH2) |
 
-## 功能概览
+## 环境要求
 
-- **仪表盘** — 账户统计、最近邮件、快捷操作
-- **账户管理** — 批量导入/导出、搜索、分页、多选操作、列排序与显隐
-- **标签系统** — 创建/编辑/删除标签，为账户分配标签，右键快速切换
-- **邮件查看** — 三栏布局（账户列表 → 邮件列表 → 邮件正文），支持收件箱/垃圾邮件切换
-- **代理设置** — SOCKS5/HTTP 代理管理、连通性测试、默认代理设置
-- **双协议收信** — Graph API 优先，IMAP 自动降级，本地缓存兜底
-- **访问密码** — 可选的访问密码保护，SHA256 Token 认证
-- **数据备份** — 一键备份/恢复 SQLite 数据库
-- **导入去重** — 两步导入流程（预览 → 确认），支持跳过/覆盖重复项
-- **深色/浅色主题** — 跟随系统或手动切换
-- **响应式布局** — 移动端适配，侧边栏抽屉模式
+- **Node.js** >= 18.x（推荐 20.x 或 22.x LTS）
+- **npm** >= 9.x
+- **操作系统** - Windows / macOS / Linux
 
-## 项目结构
+> ⚠️ **注意**：Node.js 24.x 可能存在兼容性问题，建议使用 20.x 或 22.x LTS 版本。
 
-```
-outlook-mail-manager/
-├── server/                  # 后端服务
-│   └── src/
-│       ├── config/          # 环境配置
-│       ├── controllers/     # 请求处理器
-│       ├── database/        # SQLite 连接 & 迁移
-│       ├── middlewares/      # 日志 & 错误处理
-│       ├── models/          # 数据访问层
-│       ├── routes/          # API 路由
-│       ├── services/        # 业务逻辑（OAuth、Graph、IMAP、代理）
-│       ├── types/           # TypeScript 类型定义
-│       └── utils/           # 工具函数
-├── web/                     # 前端应用
-│   └── src/
-│       ├── components/      # UI 组件（按模块分组）
-│       ├── lib/             # API 客户端 & 工具函数
-│       ├── pages/           # 页面组件
-│       ├── stores/          # Zustand 状态管理
-│       └── types/           # 前端类型定义
-├── .env.example             # 环境变量模板
-└── package.json             # 根 monorepo 配置
-```
+## 安装部署
 
-## 快速开始
-
-### 环境要求
-
-- Node.js >= 18
-- npm >= 9
-
-### 安装
+### 1. 克隆项目
 
 ```bash
-# 克隆项目后，一键安装所有依赖
+git clone <repository-url>
+cd outlook-mail-manager
+```
+
+### 2. 安装依赖
+
+```bash
 npm run install:all
 ```
 
-### 配置
+该命令会自动安装根目录、server、web 三个目录的依赖。
 
-复制环境变量模板并按需修改：
+### 3. 配置环境变量
+
+复制环境变量示例文件：
 
 ```bash
 cp .env.example .env
 ```
 
-| 变量 | 默认值 | 说明 |
-|------|--------|------|
-| `PORT` | `3000` | 服务端口 |
-| `LOG_LEVEL` | `info` | 日志级别 |
-| `DB_PATH` | `./data/outlook.db` | SQLite 数据库路径（相对于 server/） |
-| `ACCESS_PASSWORD` | _(空)_ | 访问密码，留空则不启用认证 |
+编辑 `.env` 文件：
 
-### 开发模式
+```env
+# 服务端口
+PORT=3000
+
+# 日志级别
+LOG_LEVEL=info
+
+# 数据库路径（相对于 server/）
+DB_PATH=./data/outlook.db
+
+# 访问密码（必填，留空则自动生成随机密码）
+ACCESS_PASSWORD=your_password_here
+```
+
+### 4. 启动项目
+
+#### 开发模式
 
 ```bash
-# 同时启动前后端（热重载）
 npm run dev
 ```
 
-- 前端：http://localhost:5173（Vite dev server，自动代理 `/api` 到后端）
+启动后访问：
+- 前端：http://localhost:5173
 - 后端：http://localhost:3000
 
-### 生产构建
+#### 生产模式
 
 ```bash
 # 构建前端
 npm run build
 
-# 启动后端（同时托管前端静态文件）
+# 启动服务
 npm start
 ```
 
-访问 http://localhost:3000 即可使用。
+启动后访问：http://localhost:3000
 
-## API 端点
+## 邮箱格式
 
-### 账户 `/api/accounts`
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/` | 获取账户列表（支持分页、搜索） |
-| GET | `/:id` | 获取单个账户 |
-| POST | `/` | 创建账户 |
-| PUT | `/:id` | 更新账户 |
-| DELETE | `/:id` | 删除账户 |
-| POST | `/batch-delete` | 批量删除 |
-| POST | `/import` | 批量导入 |
-| GET | `/export/all` | 导出全部 |
-
-### 邮件 `/api/mails`
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/fetch` | 拉取邮件（Graph API → IMAP 降级） |
-| POST | `/fetch-new` | 仅拉取新邮件 |
-| GET | `/cached/:accountId` | 获取缓存邮件 |
-| DELETE | `/clear/:accountId` | 清除缓存 |
-
-### 代理 `/api/proxies`
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/` | 获取代理列表 |
-| POST | `/` | 创建代理 |
-| PUT | `/:id` | 更新代理 |
-| DELETE | `/:id` | 删除代理 |
-| POST | `/:id/test` | 测试连通性 |
-| PUT | `/:id/set-default` | 设为默认 |
-
-### 仪表盘 `/api/dashboard`
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/stats` | 获取统计数据 |
-
-## 账户导入格式
-
-支持文本批量导入，每行一个账户，字段用分隔符分隔：
+支持以下格式的邮箱数据导入：
 
 ```
-邮箱----密码----客户端ID----刷新令牌
+email----password----client_id----refresh_token
 ```
 
-分隔符可自定义（默认 `----`）。
+示例：
+```
+user@outlook.com----password123----9e5f94bc-e8a4-4e73-b8be-63364c29d753----M.C547_SN1.0.U-xxx...
+```
 
-## 致谢
+### 导入方式
 
-本项目的 OAuth2 认证流程参考了 [MS_OAuth2API_Next](https://github.com/HChaoHui/MS_OAuth2API_Next)，感谢原作者 [@HChaoHui](https://github.com/HChaoHui) 的开源贡献。
+1. **文件导入** - 支持 `.txt` / `.csv` 文件，自动检测分隔符
+2. **粘贴导入** - 直接粘贴文本内容，自动去除 `[Pasted ~1 lines]` 等前缀
 
-## License
+## Token 刷新策略
 
-MIT
+| 类型 | 频率 | 说明 |
+|------|------|------|
+| 自动刷新 | 每 10 天 | 后台定时任务，启动后 5 分钟首次执行 |
+| 手动刷新 | 随时 | 仪表盘点击"刷新 Token"按钮 |
+| 被动刷新 | 用户操作时 | 收取邮件时自动刷新 |
+
+## 目录结构
+
+```
+outlook-mail-manager/
+├── server/                 # 后端服务
+│   ├── src/
+│   │   ├── config/        # 配置
+│   │   ├── controllers/   # 控制器
+│   │   ├── database/      # 数据库
+│   │   ├── middlewares/    # 中间件
+│   │   ├── models/        # 数据模型
+│   │   ├── routes/        # 路由
+│   │   ├── services/      # 业务逻辑
+│   │   ├── types/         # 类型定义
+│   │   └── utils/         # 工具函数
+│   └── data/              # SQLite 数据库文件
+├── web/                    # 前端应用
+│   ├── src/
+│   │   ├── components/    # 组件
+│   │   ├── lib/           # 工具库
+│   │   ├── pages/         # 页面
+│   │   ├── stores/        # 状态管理
+│   │   └── types/         # 类型定义
+│   └── dist/              # 构建产物
+├── .env                    # 环境变量
+├── .env.example            # 环境变量示例
+└── package.json            # 根配置
+```
+
+## API 接口
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| `/api/auth/login` | POST | 登录 |
+| `/api/auth/check` | GET | 检查认证状态 |
+| `/api/accounts` | GET | 获取账户列表 |
+| `/api/accounts` | POST | 创建账户 |
+| `/api/accounts/:id` | PUT | 更新账户 |
+| `/api/accounts/:id` | DELETE | 删除账户 |
+| `/api/accounts/import` | POST | 导入账户 |
+| `/api/accounts/export` | POST | 导出账户 |
+| `/api/mails/fetch` | POST | 获取邮件 |
+| `/api/mails/cached` | GET | 获取缓存邮件 |
+| `/api/tokens/refresh` | POST | 手动刷新 Token |
+| `/api/dashboard/stats` | GET | 仪表盘统计 |
+
+## 常见问题
+
+### Q: 启动时报错 `better-sqlite3` 相关错误？
+
+A: 需要重新编译原生模块：
+```bash
+cd server
+npm rebuild better-sqlite3
+```
+
+### Q: Node.js 版本不兼容？
+
+A: 建议使用 Node.js 20.x 或 22.x LTS 版本：
+```bash
+# 使用 nvm 切换版本
+nvm install 22
+nvm use 22
+```
+
+### Q: 登录密码忘记了？
+
+A: 删除 `.env` 文件中的 `ACCESS_PASSWORD` 配置，重启服务后会在控制台打印新的随机密码。
+
+### Q: 邮件收取失败？
+
+A: 检查以下几点：
+1. Refresh Token 是否有效
+2. 网络连接是否正常
+3. 是否需要配置代理
+
+## 许可证
+
+MIT License

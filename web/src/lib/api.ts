@@ -98,3 +98,7 @@ export const tagApi = {
       { method: 'POST', body: JSON.stringify({ tag_ids: tagIds }) }
     ),
 };
+
+export const tokenApi = {
+  refreshAll: () => request<{ message: string }>('/tokens/refresh', { method: 'POST' }),
+};

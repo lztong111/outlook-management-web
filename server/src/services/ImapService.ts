@@ -4,12 +4,23 @@ import { MailMessage } from '../types';
 import logger from '../utils/logger';
 
 export class ImapService {
+  private folderMap: Record<string, string> = {
+    'INBOX': 'INBOX',
+    'Junk': 'Junk',
+    'Trash': 'Deleted Items',
+  };
+
+  private mapMailbox(mailbox: string): string {
+    return this.folderMap[mailbox] || mailbox;
+  }
+
   generateAuthString(email: string, accessToken: string): string {
     const authString = `user=${email}\x01auth=Bearer ${accessToken}\x01\x01`;
     return Buffer.from(authString).toString('base64');
   }
 
   fetchMails(email: string, authString: string, mailbox = 'INBOX', top = 50): Promise<Partial<MailMessage>[]> {
+    const mappedMailbox = this.mapMailbox(mailbox);
     return new Promise((resolve, reject) => {
       const imap = new Imap({
         user: email,
@@ -28,7 +39,7 @@ export class ImapService {
       imap.once('ready', async () => {
         try {
           await new Promise<void>((res, rej) => {
-            imap.openBox(mailbox, true, (err) => (err ? rej(err) : res()));
+            imap.openBox(mappedMailbox, true, (err) => (err ? rej(err) : res()));
           });
 
           const results: number[] = await new Promise((res, rej) => {
@@ -95,6 +106,7 @@ export class ImapService {
   }
 
   clearMailbox(email: string, authString: string, mailbox = 'INBOX'): Promise<void> {
+    const mappedMailbox = this.mapMailbox(mailbox);
     return new Promise((resolve, reject) => {
       const imap = new Imap({
         user: email,
@@ -109,7 +121,7 @@ export class ImapService {
       imap.once('ready', async () => {
         try {
           await new Promise<void>((res, rej) => {
-            imap.openBox(mailbox, false, (err) => (err ? rej(err) : res()));
+            imap.openBox(mappedMailbox, false, (err) => (err ? rej(err) : res()));
           });
 
           const results: number[] = await new Promise((res, rej) => {

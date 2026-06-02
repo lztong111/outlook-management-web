@@ -1,19 +1,20 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Globe, Mail, X } from 'lucide-react';
+import { LayoutDashboard, Users, Globe, Mail, X, LogOut, Shield } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: '仪表盘' },
   { to: '/accounts', icon: Users, label: '邮箱管理' },
-  { to: '/proxy', icon: Globe, label: '代理设置' },
+  // { to: '/proxy', icon: Globe, label: '代理设置' },  // 暂时隐藏
 ];
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  onLogout: () => void;
 }
 
-export function AppSidebar({ open, onClose }: Props) {
+export function AppSidebar({ open, onClose, onLogout }: Props) {
   return (
     <>
       {/* Mobile overlay */}
@@ -43,10 +44,10 @@ export function AppSidebar({ open, onClose }: Props) {
               onClick={onClose}
               className={({ isActive }) =>
                 cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
                   isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                    ? 'bg-primary/10 text-primary border-l-2 border-primary shadow-sm'
+                    : 'text-muted-foreground hover:bg-secondary hover:text-foreground border-l-2 border-transparent'
                 )
               }
             >
@@ -55,8 +56,27 @@ export function AppSidebar({ open, onClose }: Props) {
             </NavLink>
           ))}
         </nav>
-        <div className="p-3 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">v1.0.0</p>
+        {/* User info & logout */}
+        <div className="p-3 border-t border-border space-y-2">
+          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-secondary/50">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/20">
+              <Shield className="h-3.5 w-3.5 text-primary" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-foreground truncate">管理员</p>
+              <p className="text-[10px] text-muted-foreground">已登录</p>
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              if (confirm('确定要退出登录吗？')) onLogout();
+            }}
+            className="flex w-full items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            退出登录
+          </button>
+          <p className="text-[10px] text-muted-foreground text-center">v1.0.0</p>
         </div>
       </aside>
     </>

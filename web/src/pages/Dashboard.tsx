@@ -1,7 +1,8 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Inbox, AlertTriangle, RefreshCw, Globe } from 'lucide-react';
-import { dashboardApi } from '../lib/api';
+import { Users, Inbox, AlertTriangle, RefreshCw, Trash, RotateCw } from 'lucide-react';
+import { dashboardApi, tokenApi } from '../lib/api';
+import { toast } from 'sonner';
 import type { DashboardStats } from '../types';
 import { StatCard } from '../components/dashboard/StatCard';
 import { QuickActions } from '../components/dashboard/QuickActions';
@@ -12,6 +13,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [tokenRefreshing, setTokenRefreshing] = useState(false);
 
   const fetchStats = useCallback(async (isRefresh = false) => {
     try {
@@ -27,6 +29,18 @@ export default function Dashboard() {
       setRefreshing(false);
     }
   }, []);
+
+  const handleRefreshTokens = async () => {
+    setTokenRefreshing(true);
+    try {
+      await tokenApi.refreshAll();
+      toast.success('Token 刷新已启动，正在后台执行...');
+    } catch (err: any) {
+      toast.error(err.message || '启动 Token 刷新失败');
+    } finally {
+      setTokenRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     fetchStats();
@@ -96,11 +110,10 @@ export default function Dashboard() {
       color: '#F59E0B',
     },
     {
-      icon: Globe,
-      label: '代理在线数',
-      value: stats.activeProxies,
-      sub: `共 ${stats.totalProxies} 个代理`,
-      color: '#8B5CF6',
+      icon: Trash,
+      label: '已删除邮件',
+      value: stats.totalTrashMails,
+      color: '#EF4444',
     },
   ];
 
@@ -116,14 +129,25 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">仪表盘</h1>
           <p className="text-sm text-muted-foreground mt-0.5">邮箱管理系统概览</p>
         </div>
-        <button
-          onClick={() => fetchStats(true)}
-          disabled={refreshing}
-          className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
-          刷新
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleRefreshTokens}
+            disabled={tokenRefreshing}
+            className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+            title="手动刷新所有邮箱的 Token"
+          >
+            <RotateCw className={`h-4 w-4 ${tokenRefreshing ? 'animate-spin' : ''}`} />
+            刷新 Token
+          </button>
+          <button
+            onClick={() => fetchStats(true)}
+            disabled={refreshing}
+            className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+            刷新
+          </button>
+        </div>
       </motion.div>
 
       {/* Stat Cards - 4 columns */}

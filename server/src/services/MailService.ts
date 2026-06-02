@@ -50,10 +50,12 @@ export class MailService {
       accountModel.updateSyncTime(accountId);
       return { mails: mails as any, total: mails.length, protocol: 'imap', cached: false };
     } catch (err: any) {
-      logger.error(`IMAP also failed for ${account.email}: ${err.message}`);
+      logger.error(`IMAP also failed for ${account.email} (${mailbox}): ${err.message}`);
 
-      // 两种方式都失败，标记账户为 error
-      accountModel.markError(accountId);
+      // 只有 INBOX 失败才标记账户为异常
+      if (mailbox === 'INBOX') {
+        accountModel.markError(accountId);
+      }
 
       // 返回缓存
       const cached = cacheModel.getByAccount(accountId, mailbox, 1, top);

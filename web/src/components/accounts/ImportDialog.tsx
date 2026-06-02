@@ -8,10 +8,37 @@ interface Props {
   onImport: () => void;
 }
 
+const DEFAULT_FORMAT = ['email', 'password', 'client_id', 'refresh_token'];
+const FIELD_OPTIONS = ['email', 'password', 'client_id', 'refresh_token'];
+
+function cleanContent(raw: string): string {
+  return raw
+    .split('\n')
+    .map(line => {
+      line = line.trim();
+      // Remove [Pasted ~N lines] prefix
+      line = line.replace(/^\[Pasted\s*~?\d*\s*lines?\]\s*/i, '');
+      // Remove line number prefixes like "1: " or "12: "
+      line = line.replace(/^\d+:\s*/, '');
+      return line;
+    })
+    .filter(line => line.length > 0)
+    .join('\n');
+}
+
+function detectSeparator(content: string): string {
+  const firstLine = content.split('\n')[0];
+  const separators = ['----', ':::', '|||', '\t', ','];
+  for (const sep of separators) {
+    if (firstLine.includes(sep)) return sep;
+  }
+  return '----';
+}
+
 export default function ImportDialog({ open, onClose, onImport }: Props) {
-  const [content, setContent] = useState('');
+  const [rawContent, setRawContent] = useState('');
   const [separator, setSeparator] = useState('----');
-  const [format, setFormat] = useState<string[]>(['email', 'password', 'client_id', 'refresh_token']);
+  const [format, setFormat] = useState<string[]>([...DEFAULT_FORMAT]);
   const [fileName, setFileName] = useState('');
   const [step, setStep] = useState<'input' | 'preview'>('input');
   const [previewData, setPreviewData] = useState<ImportPreviewResult | null>(null);
@@ -20,13 +47,21 @@ export default function ImportDialog({ open, onClose, onImport }: Props) {
 
   if (!open) return null;
 
+  const content = cleanContent(rawContent);
+
   const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setFileName(file.name);
     const reader = new FileReader();
     reader.onload = (ev) => {
-      setContent((ev.target?.result as string) || '');
+      const text = (ev.target?.result as string) || '';
+      setRawContent(text);
+      const cleaned = cleanContent(text);
+      if (cleaned) {
+        const detected = detectSeparator(cleaned);
+        setSeparator(detected);
+      }
     };
     reader.readAsText(file);
   };
@@ -69,15 +104,15 @@ export default function ImportDialog({ open, onClose, onImport }: Props) {
   };
 
   const handleClose = () => {
-    setContent('');
+    setRawContent('');
     setFileName('');
     setStep('input');
     setPreviewData(null);
     setMode('skip');
+    setSeparator('----');
+    setFormat([...DEFAULT_FORMAT]);
     onClose();
   };
-
-  const fieldOptions = ['email', 'password', 'client_id', 'refresh_token'];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 animate-[fadeIn_0.2s_ease-out]" onClick={handleClose}>
@@ -91,23 +126,43 @@ export default function ImportDialog({ open, onClose, onImport }: Props) {
             {/* File picker */}
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">选择文件</label>
-              <label className="flex items-center gap-2 px-4 py-2 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+              <label className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                 <svg className="w-5 h-5 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" /></svg>
                 <span className="text-sm text-zinc-600 dark:text-zinc-400">{fileName || '点击选择 .txt / .csv 文件'}</span>
                 <input type="file" accept=".txt,.csv" onChange={handleFile} className="hidden" />
               </label>
+              {content && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  已识别 {content.split('\n').filter(Boolean).length} 行数据
+                </p>
+              )}
             </div>
 
             {/* Separator */}
             <div>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1">分隔符</label>
-              <input
-                type="text"
-                value={separator}
-                onChange={e => setSeparator(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="例如: ---- 或 : 或 |"
-              />
+              <div className="flex gap-2 flex-wrap">
+                {['----', ':::', '|', '\t', ','].map(sep => (
+                  <button
+                    key={sep}
+                    onClick={() => setSeparator(sep)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-mono border transition-colors ${
+                      separator === sep
+                        ? 'bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-300'
+                        : 'border-zinc-300 dark:border-zinc-600 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                    }`}
+                  >
+                    {sep === '\t' ? 'Tab' : sep}
+                  </button>
+                ))}
+                <input
+                  type="text"
+                  value={separator}
+                  onChange={e => setSeparator(e.target.value)}
+                  className="flex-1 min-w-[80px] px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="自定义"
+                />
+              </div>
             </div>
 
             {/* Field order */}
@@ -123,7 +178,7 @@ export default function ImportDialog({ open, onClose, onImport }: Props) {
                       className="flex-1 px-3 py-1.5 rounded-lg border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">-- 选择字段 --</option>
-                      {fieldOptions.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                      {FIELD_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
                     </select>
                     {format.length > 1 && (
                       <button onClick={() => removeField(i)} className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors">

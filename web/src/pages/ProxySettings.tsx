@@ -73,7 +73,7 @@ export default function ProxySettings() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-100">代理设置</h1>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">管理 SOCKS5 / HTTP 代理，用于邮件收发</p>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">管理 SOCKS5 / HTTP 代理，用于邮件收发</p>
         </div>
         <button
           onClick={handleAdd}
@@ -86,7 +86,7 @@ export default function ProxySettings() {
         </button>
       </div>
 
-      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200 dark:border-zinc-800 p-5">
+      <div className="bg-white dark:bg-zinc-900 rounded-xl border border-zinc-200/80 dark:border-zinc-800/80 p-5 shadow-sm">
         <ProxyTable
           proxies={proxies}
           loading={loading}
