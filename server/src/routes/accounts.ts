@@ -9,6 +9,7 @@ accountRoutes.post('/', ctrl.create);
 accountRoutes.put('/:id', ctrl.update);
 accountRoutes.delete('/:id', ctrl.delete);
 accountRoutes.post('/batch-delete', ctrl.batchDelete);
+accountRoutes.delete('/delete-all', ctrl.deleteAll);
 accountRoutes.post('/import', ctrl.import);
 accountRoutes.post('/import-preview', ctrl.importPreview);
 accountRoutes.post('/import-confirm', ctrl.importConfirm);

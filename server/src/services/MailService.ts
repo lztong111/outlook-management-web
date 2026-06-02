@@ -27,6 +27,8 @@ export class MailService {
         const mails = await graphService.fetchMails(token.access_token, mailbox, top, proxyId);
         cacheModel.upsert(accountId, mailbox, mails);
         accountModel.updateSyncTime(accountId);
+        // 检查首条邮件是否包含 OpenAI
+        this.checkMailUsage(accountId, mails);
         return { mails: mails as any, total: mails.length, protocol: 'graph', cached: false };
       }
       logger.warn(`Graph API no Mail.Read scope for ${account.email}, falling back to IMAP`);
@@ -48,6 +50,8 @@ export class MailService {
       const mails = await imapService.fetchMails(account.email, authString, mailbox, top);
       cacheModel.upsert(accountId, mailbox, mails);
       accountModel.updateSyncTime(accountId);
+      // 检查首条邮件是否包含 OpenAI
+      this.checkMailUsage(accountId, mails);
       return { mails: mails as any, total: mails.length, protocol: 'imap', cached: false };
     } catch (err: any) {
       logger.error(`IMAP also failed for ${account.email} (${mailbox}): ${err.message}`);
@@ -63,6 +67,22 @@ export class MailService {
         return { mails: cached.list, total: cached.total, protocol: 'graph', cached: true };
       }
       throw new Error(`Both Graph API and IMAP failed: ${err.message}`);
+    }
+  }
+
+  private checkMailUsage(accountId: number, mails: any[]) {
+    try {
+      // 检查首条邮件内容是否包含 OpenAI
+      if (mails.length > 0) {
+        const firstMail = mails[0];
+        const content = (firstMail.text_content || '') + (firstMail.html_content || '');
+        if (content.includes('OpenAI')) {
+          accountModel.markAsUsed(accountId);
+          logger.info(`Account ${accountId} marked as used (OpenAI detected)`);
+        }
+      }
+    } catch (err: any) {
+      logger.error(`Failed to check mail usage for account ${accountId}: ${err.message}`);
     }
   }
 

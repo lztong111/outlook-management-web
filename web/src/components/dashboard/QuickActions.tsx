@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { AlertCircle, XCircle, Clock } from 'lucide-react';
+import { XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import type { DashboardStats } from '../../types';
 
@@ -12,25 +12,11 @@ export function QuickActions({ stats }: Props) {
 
   const actions = [
     {
-      icon: Clock,
-      label: 'Token即将过期',
-      color: '#F59E0B',
-      path: '/accounts',
-      count: stats?.expiringTokens || 0,
-    },
-    {
       icon: XCircle,
       label: '异常邮箱',
       color: '#EF4444',
       path: '/accounts',
       count: stats?.errorAccounts || 0,
-    },
-    {
-      icon: AlertCircle,
-      label: '未使用邮箱',
-      color: '#8B5CF6',
-      path: '/accounts',
-      count: stats?.unusedAccounts || 0,
     },
   ];
 
@@ -44,7 +30,7 @@ export function QuickActions({ stats }: Props) {
       <div className="px-5 py-4 border-b border-border">
         <h2 className="text-sm font-semibold text-foreground">快速操作</h2>
       </div>
-      <div className="p-4 grid grid-cols-3 gap-3">
+      <div className="p-4 grid grid-cols-1 gap-3">
         {actions.map((action, i) => (
           <motion.button
             key={action.label}

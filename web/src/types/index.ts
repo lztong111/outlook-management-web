@@ -7,6 +7,7 @@ export interface Account {
   refresh_token: string;
   remark: string;
   status: 'active' | 'inactive' | 'error';
+  is_used: number;
   last_synced_at: string | null;
   token_refreshed_at: string | null;
   created_at: string;

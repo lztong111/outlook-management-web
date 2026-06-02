@@ -48,6 +48,11 @@ export class AccountController {
     success(ctx, { deleted });
   }
 
+  async deleteAll(ctx: Context) {
+    const deleted = model.deleteAll();
+    success(ctx, { deleted });
+  }
+
   async import(ctx: Context) {
     const body = ctx.request.body as any;
     if (!body.content) return fail(ctx, 'content is required', 400);

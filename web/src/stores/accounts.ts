@@ -14,6 +14,7 @@ interface AccountStore {
   updateAccount: (id: number, data: Partial<Account>) => Promise<void>;
   deleteAccount: (id: number) => Promise<void>;
   batchDelete: (ids: number[]) => Promise<void>;
+  deleteAll: () => Promise<void>;
   importAccounts: (req: ImportRequest) => Promise<ImportResult>;
   exportAccounts: (req: ExportRequest) => Promise<string>;
   setSelectedIds: (ids: number[]) => void;
@@ -74,6 +75,12 @@ export const useAccountStore = create<AccountStore>((set, get) => ({
 
   batchDelete: async (ids) => {
     await accountApi.batchDelete(ids);
+    set({ selectedIds: [] });
+    await get().fetchAccounts();
+  },
+
+  deleteAll: async () => {
+    await accountApi.deleteAll();
     set({ selectedIds: [] });
     await get().fetchAccounts();
   },

@@ -14,7 +14,7 @@ import BackupRestore from '../components/accounts/BackupRestore';
 export default function Accounts() {
   const {
     accounts, loading, selectedIds, searchQuery, pagination,
-    fetchAccounts, createAccount, updateAccount, deleteAccount, batchDelete,
+    fetchAccounts, createAccount, updateAccount, deleteAccount, batchDelete, deleteAll,
     exportAccounts, setSelectedIds, setSearchQuery, setPage, setPageSize,
   } = useAccountStore();
 
@@ -75,11 +75,9 @@ export default function Accounts() {
   };
 
   const handleDeleteAll = async () => {
-    const allIds = accounts.map(a => a.id);
-    if (allIds.length === 0) return;
-    if (!confirm(`确定要删除当前页全部 ${allIds.length} 个邮箱吗？`)) return;
+    if (!confirm('确定要删除全部邮箱吗？此操作不可恢复！')) return;
     try {
-      await batchDelete(allIds);
+      await deleteAll();
       toast.success('已全部删除');
     } catch (e: any) {
       toast.error(e.message || '删除失败');

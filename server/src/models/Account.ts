@@ -61,6 +61,11 @@ export class AccountModel {
     return result.changes;
   }
 
+  deleteAll(): number {
+    const result = db.prepare('DELETE FROM accounts').run();
+    return result.changes;
+  }
+
   importPreview(req: ImportRequest): { newItems: any[]; duplicates: any[]; errors: string[] } {
     const { content, separator = '----', format = ['email', 'password', 'client_id', 'refresh_token'] } = req;
     const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
@@ -179,6 +184,11 @@ export class AccountModel {
   markError(id: number) {
     db.prepare('UPDATE accounts SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
       .run('error', id);
+  }
+
+  markAsUsed(id: number) {
+    db.prepare('UPDATE accounts SET is_used = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+      .run(id);
   }
 
   getAll(): Account[] {

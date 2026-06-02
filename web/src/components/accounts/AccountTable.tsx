@@ -16,6 +16,7 @@ export const ALL_COLUMNS = [
   { key: 'client_id', label: '客户端 ID', defaultVisible: false },
   { key: 'refresh_token', label: '令牌', defaultVisible: false },
   { key: 'status', label: '状态', defaultVisible: true },
+  { key: 'usage', label: '使用', defaultVisible: true },
   { key: 'token_status', label: 'Token', defaultVisible: true },
   { key: 'actions', label: '操作', defaultVisible: true },
 ] as const;
@@ -167,6 +168,21 @@ export default function AccountTable({ accounts, selectedIds, onSelectIds, onEdi
     );
   };
 
+  const usageBadge = (account: Account) => {
+    if (account.is_used) {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+          已使用
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 dark:bg-zinc-700 dark:text-zinc-400">
+        未使用
+      </span>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20 text-zinc-400">
@@ -213,6 +229,9 @@ export default function AccountTable({ accounts, selectedIds, onSelectIds, onEdi
             )}
             {isVisible('status') && (
               <SortHeader label="状态" sortKey="status" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} className="min-w-[70px]" />
+            )}
+            {isVisible('usage') && (
+              <th className="min-w-[70px] text-center py-3 px-3 font-medium text-zinc-500 dark:text-zinc-400">使用</th>
             )}
             {isVisible('token_status') && (
               <SortHeader label="Token" sortKey="token_refreshed_at" currentKey={sortKey} currentDir={sortDir} onSort={handleSort} className="min-w-[80px]" />
@@ -298,6 +317,9 @@ export default function AccountTable({ accounts, selectedIds, onSelectIds, onEdi
               )}
               {isVisible('status') && (
                 <td className="py-3 px-3 text-center">{statusBadge(account.status)}</td>
+              )}
+              {isVisible('usage') && (
+                <td className="py-3 px-3 text-center">{usageBadge(account)}</td>
               )}
               {isVisible('token_status') && (
                 <td className="py-3 px-3 text-center">{tokenStatusBadge(account)}</td>

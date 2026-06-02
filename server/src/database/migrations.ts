@@ -72,6 +72,13 @@ export function runMigrations() {
     // 字段已存在则忽略
   }
 
+  // 6. 新增 is_used 是否已使用字段（0=未使用，1=已使用）
+  try {
+    db.exec(`ALTER TABLE accounts ADD COLUMN is_used INTEGER DEFAULT 0`);
+  } catch {
+    // 字段已存在则忽略
+  }
+
   // 6. 标签系统
   db.exec(`
     CREATE TABLE IF NOT EXISTS tags (

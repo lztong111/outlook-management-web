@@ -39,6 +39,8 @@ export const accountApi = {
     request<{ deleted: boolean }>(`/accounts/${id}`, { method: 'DELETE' }),
   batchDelete: (ids: number[]) =>
     request<{ deleted: number }>('/accounts/batch-delete', { method: 'POST', body: JSON.stringify({ ids }) }),
+  deleteAll: () =>
+    request<{ deleted: number }>('/accounts/delete-all', { method: 'DELETE' }),
   import: (data: ImportRequest) =>
     request<ImportResult>('/accounts/import', { method: 'POST', body: JSON.stringify(data) }),
   importPreview: (data: ImportRequest) =>
